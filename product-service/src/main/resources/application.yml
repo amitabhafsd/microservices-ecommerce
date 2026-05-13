@@ -1,0 +1,7 @@
+
+spring:
+  application:
+    name: PRODUCT-SERVICE
+
+server:
+  port: 0

@@ -1,0 +1,7 @@
+
+spring:
+  application:
+    name: INVENTORY-SERVICE
+
+server:
+  port: 0
