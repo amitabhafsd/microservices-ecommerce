@@ -10,7 +10,7 @@ spring:
         ## native:
         ##   search-locations: classpath:/config
         git:
-          uri: https://github.com/amitabhafsd/demo1
+          uri: https://github.com/amitabhafsd/microservices-ecommerce/config
           clone-on-start: true
   application:
     name: CONFIG-SERVER
