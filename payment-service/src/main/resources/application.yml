@@ -2,6 +2,3 @@
 spring:
   application:
     name: PAYMENT-SERVICE
-
-server:
-  port: 0
