@@ -1,7 +1,22 @@
-
 spring:
+  profiles:
+    ## active: native will be the one responsible for local native configs
+    ## mentioned in the config server
+    ## rather than a centralized git repository
+    active: native
+  cloud:
+    config:
+      server:
+        ## native:
+        ##   search-locations: classpath:/config
+        git:
+          uri: https://github.com/amitabhafsd/demo1
+          clone-on-start: true
   application:
     name: CONFIG-SERVER
-
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
 server:
   port: 8888
