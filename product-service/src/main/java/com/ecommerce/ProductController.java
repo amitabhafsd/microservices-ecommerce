@@ -20,6 +20,12 @@ public class ProductController {
                 .ok(productService.createProduct(request));
     }
 
+    @PostMapping("/bulk")
+    public ResponseEntity<List<ProductResponse>> createProducts(@RequestBody List<ProductRequest> requests) {
+        return ResponseEntity
+                .ok(productService.createProducts(requests));
+    }
+
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         return ResponseEntity

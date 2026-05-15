@@ -12,19 +12,23 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public ProductResponse createProduct(
-            ProductRequest request) {
-
-        Product product = Product.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .price(request.getPrice())
-                .stock(request.getStock())
-                .build();
-
+    public ProductResponse createProduct(ProductRequest request) {
+        Product product = mapToProduct(request);
         Product saved = productRepository.save(product);
-
         return mapToResponse(saved);
+    }
+
+    public List<ProductResponse> createProducts(List<ProductRequest> requests) {
+
+        List<Product> products = requests
+                .stream()
+                .map(this::mapToProduct)
+                .toList();
+
+        return productRepository.saveAll(products)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     public List<ProductResponse> getAllProducts() {
@@ -49,8 +53,7 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    private ProductResponse mapToResponse(
-            Product product) {
+    private ProductResponse mapToResponse(Product product) {
 
         return ProductResponse.builder()
                 .id(product.getId())
@@ -58,6 +61,16 @@ public class ProductService {
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .stock(product.getStock())
+                .build();
+    }
+
+    private Product mapToProduct(ProductRequest request) {
+
+        return Product.builder()
+                .name(request.getName())
+                .description(request.getDescription())
+                .price(request.getPrice())
+                .stock(request.getStock())
                 .build();
     }
 }
