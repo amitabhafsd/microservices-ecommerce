@@ -4,43 +4,6 @@ spring:
     ## mentioned in the config server
     ## rather than a centralized git repository
     active: native
-  cloud:
-    gateway:
-      routes:
-        - id: order-service
-          uri: lb://ORDER-SERVICE
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            - JwtAuthenticationFilter
-
-        - id: payment-service
-          uri: lb://PAYMENT-SERVICE
-          predicates:
-            - Path=/api/payments/**
-          filters:
-            - JwtAuthenticationFilter
-
-        - id: inventory-service
-          uri: lb://INVENTORY-SERVICE
-          predicates:
-            - Path=/api/inventory/**
-          filters:
-            - JwtAuthenticationFilter
-
-        - id: product-service
-          uri: lb://PRODUCT-SERVICE
-          predicates:
-            - Path=/api/products/**
-          filters:
-            - JwtAuthenticationFilter
-
-        - id: notification-service
-          uri: lb://NOTIFICATION-SERVICE
-          predicates:
-            - Path=/api/notification/**
-          filters:
-            - JwtAuthenticationFilter
     config:
       server:
         ## native:
