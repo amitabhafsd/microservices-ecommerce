@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Ecommerce SVC" type="CompoundRunConfigurationType">
+    <toRun name="ApiGatewayApplication" type="Application" />
+    <toRun name="AuthServiceApplication" type="Application" />
+    <toRun name="ConfigServerApplication" type="Application" />
+    <toRun name="DiscoveryServerApplication" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>
