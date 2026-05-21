@@ -6,12 +6,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class PaymentFailedConsumer {
+public class InventoryFailedConsumer {
 
     private final OrderService orderService;
 
-    @KafkaListener(topics = "payment-failed-topic")
-    public void consume(PaymentFailedEvent event) {
+    @KafkaListener(topics = "inventory-failed-topic")
+    public void consume(InventoryFailedEvent event) {
 
         orderService.markOrderCancelled(event.getOrderId());
     }

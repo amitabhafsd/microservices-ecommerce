@@ -13,6 +13,10 @@ public class PaymentFailedConsumer {
     @KafkaListener(topics = "payment-failed-topic")
     public void consume(PaymentFailedEvent event) {
 
+        if (event.getItems() == null || event.getItems().isEmpty()) {
+            return;
+        }
+
         for (OrderItemRequest item : event.getItems()) {
 
             inventoryService.releaseInventory(item.getProductId(), item.getQuantity());

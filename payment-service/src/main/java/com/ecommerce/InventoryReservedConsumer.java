@@ -32,6 +32,7 @@ public class InventoryReservedConsumer {
             producer.publishPaymentFailed(PaymentFailedEvent
                     .builder()
                     .orderId(event.getOrderId())
+                    .items(event.getItems())
                     .reason("Payment failed")
                     .build());
         }
