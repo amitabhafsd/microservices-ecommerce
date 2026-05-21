@@ -3,16 +3,16 @@ package com.ecommerce;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
 @Builder
-public class PaymentFailedEvent {
+public class OrderResponse {
 
     private UUID orderId;
 
-    private List<OrderItemRequest> items;
+    private String status;
 
-    private String reason;
+    private BigDecimal totalAmount;
 }

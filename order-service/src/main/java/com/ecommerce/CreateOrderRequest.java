@@ -1,18 +1,14 @@
 package com.ecommerce;
 
-import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
 import java.util.UUID;
 
 @Data
-@Builder
-public class PaymentFailedEvent {
+public class CreateOrderRequest {
 
-    private UUID orderId;
+    private UUID userId;
 
     private List<OrderItemRequest> items;
-
-    private String reason;
 }

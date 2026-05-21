@@ -15,6 +15,11 @@ public class PaymentKafkaProducer {
     }
 
     public void publishPaymentFailed(PaymentFailedEvent event) {
-        kafkaTemplate.send("payment-failed-topic", event);
+        PaymentFailedEvent toBePublished = PaymentFailedEvent.builder()
+                .orderId(event.getOrderId())
+                .items(event.getItems())
+                .reason("Payment failed")
+                .build();
+        kafkaTemplate.send("payment-failed-topic", toBePublished);
     }
 }

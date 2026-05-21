@@ -4,8 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-
 @Component
 @RequiredArgsConstructor
 public class InventoryReservedConsumer {
@@ -18,9 +16,9 @@ public class InventoryReservedConsumer {
     public void consume(InventoryReservedEvent event) {
 
         // Dummy amount for now
-        BigDecimal amount = BigDecimal.valueOf(1000);
+//        BigDecimal amount = BigDecimal.valueOf(1000);
 
-        boolean success = paymentService.processPayment(event.getOrderId(), amount);
+        boolean success = paymentService.processPayment(event.getOrderId(), event.getAmount());
 
         if (success) {
 

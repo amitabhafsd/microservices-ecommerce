@@ -12,7 +12,13 @@ public class InventoryKafkaProducer {
             kafkaTemplate;
 
     public void publishInventoryReserved(InventoryReservedEvent event) {
-        kafkaTemplate.send("inventory-reserved-topic", event);
+        InventoryReservedEvent toBePublished = InventoryReservedEvent.builder()
+                .orderId(event.getOrderId())
+                .items(event.getItems())
+                .amount(event.getAmount())
+                .build();
+
+        kafkaTemplate.send("inventory-reserved-topic", toBePublished);
     }
 
     public void publishInventoryFailed(InventoryFailedEvent event) {

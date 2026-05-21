@@ -44,6 +44,8 @@ public class InventoryService {
         }
     }*/
 
+
+
     public boolean reserveInventory(UUID productId, Integer quantity) {
         Inventory inventory = inventoryRepository.findByProductId(productId).orElseThrow();
         if (inventory.getAvailableQuantity() < quantity) {
