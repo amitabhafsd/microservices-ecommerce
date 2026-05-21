@@ -2,6 +2,11 @@
 spring:
   application:
     name: PAYMENT-SERVICE
+  config:
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
+      name: payment-service
 
   datasource:
     url: jdbc:postgresql://localhost:5432/payment_db

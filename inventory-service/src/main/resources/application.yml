@@ -4,6 +4,9 @@ spring:
     name: INVENTORY-SERVICE
   config:
     import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
+      name: inventory-service
 
   datasource:
     url: jdbc:postgresql://localhost:5432/inventory_db

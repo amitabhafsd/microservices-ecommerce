@@ -1,16 +1,11 @@
 spring:
   profiles:
-    ## active: native will be the one responsible for local native configs
-    ## mentioned in the config server
-    ## rather than a centralized git repository
     active: native
+  cloud:
     config:
       server:
-        ## native:
-        ##   search-locations: classpath:/config
-        git:
-          uri: https://github.com/amitabhafsd/microservices-ecommerce/config
-          clone-on-start: true
+        native:
+          search-locations: classpath:/config
   application:
     name: CONFIG-SERVER
 eureka:

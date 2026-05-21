@@ -4,3 +4,6 @@ spring:
     name: PRODUCT-SERVICE
   config:
     import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
+      name: product-service
