@@ -1,0 +1,1233 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [ 3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R ] /Count 10 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2054 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+(E-Commerce Microservices Flow and Concept Gap Analysis) Tj
+T*
+() Tj
+T*
+(Scope) Tj
+T*
+() Tj
+T*
+(This document reviews the current workspace implementation against the microservice concepts) Tj
+T*
+(described in the chat notes and the existing architecture blueprint.) Tj
+T*
+() Tj
+T*
+(Reviewed modules:) Tj
+T*
+() Tj
+T*
+(- discovery-server) Tj
+T*
+(- config-server) Tj
+T*
+(- api-gateway) Tj
+T*
+(- auth-service) Tj
+T*
+(- product-service) Tj
+T*
+(- inventory-service) Tj
+T*
+(- order-service) Tj
+T*
+(- payment-service) Tj
+T*
+(- notification-service) Tj
+T*
+() Tj
+T*
+(Current High-Level Architecture) Tj
+T*
+() Tj
+T*
+([diagram source: Mermaid]) Tj
+T*
+(flowchart LR) Tj
+T*
+(    Client[Client / UI / Postman]) Tj
+T*
+() Tj
+T*
+(    Gateway[API Gateway / Spring Cloud Gateway / JWT route filter]) Tj
+T*
+(    Auth[Auth Service / register / login / JWT]) Tj
+T*
+(    Product[Product Service / catalog CRUD]) Tj
+T*
+(    Order[Order Service / order lifecycle]) Tj
+T*
+(    Inventory[Inventory Service / stock reserve / release]) Tj
+T*
+(    Payment[Payment Service / payment simulation]) Tj
+T*
+(    Notification[Notification Service / currently empty]) Tj
+T*
+() Tj
+T*
+(    Eureka[Eureka Discovery Server]) Tj
+T*
+(    Config[Config Server / native classpath config]) Tj
+T*
+() Tj
+T*
+(    AuthDb[\(auth_db\)]) Tj
+T*
+(    ProductDb[\(product_db\)]) Tj
+T*
+(    OrderDb[\(order_db\)]) Tj
+T*
+(    InventoryDb[\(inventory_db\)]) Tj
+T*
+(    PaymentDb[\(payment_db\)]) Tj
+T*
+() Tj
+T*
+(    Kafka[\(Kafka Broker\)]) Tj
+T*
+() Tj
+T*
+(    Client --> Gateway) Tj
+T*
+(    Gateway -->|/auth/| Auth) Tj
+T*
+(    Gateway -->|/api/products/ + JWT| Product) Tj
+T*
+(    Gateway -->|/api/orders/ + JWT| Order) Tj
+T*
+(    Gateway -->|/api/inventory/ + JWT| Inventory) Tj
+T*
+(    Gateway -->|/api/payments/ + JWT| Payment) Tj
+T*
+(    Gateway -->|/api/notification/ + JWT| Notification) Tj
+T*
+() Tj
+T*
+(    Auth --> AuthDb) Tj
+T*
+(    Product --> ProductDb) Tj
+T*
+(    Order --> OrderDb) Tj
+T*
+(    Inventory --> InventoryDb) Tj
+T*
+(    Payment --> PaymentDb) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2509 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+(    Order -->|order-created-topic| Kafka) Tj
+T*
+(    Kafka -->|order-created-topic| Inventory) Tj
+T*
+(    Inventory -->|inventory-reserved-topic| Kafka) Tj
+T*
+(    Inventory -->|inventory-failed-topic| Kafka) Tj
+T*
+(    Kafka -->|inventory-reserved-topic| Payment) Tj
+T*
+(    Payment -->|payment-success-topic| Kafka) Tj
+T*
+(    Payment -->|payment-failed-topic| Kafka) Tj
+T*
+(    Kafka -->|payment-success-topic| Order) Tj
+T*
+(    Kafka -->|payment-failed-topic| Order) Tj
+T*
+(    Kafka -->|payment-failed-topic| Inventory) Tj
+T*
+(    Kafka -->|inventory-failed-topic| Order) Tj
+T*
+() Tj
+T*
+(    Gateway -.register/discover.-> Eureka) Tj
+T*
+(    Auth -.register/discover.-> Eureka) Tj
+T*
+(    Product -.register/discover.-> Eureka) Tj
+T*
+(    Order -.register/discover.-> Eureka) Tj
+T*
+(    Inventory -.register/discover.-> Eureka) Tj
+T*
+(    Payment -.register/discover.-> Eureka) Tj
+T*
+(    Notification -.register/discover.-> Eureka) Tj
+T*
+() Tj
+T*
+(    Gateway -.loads config.-> Config) Tj
+T*
+(    Auth -.loads config.-> Config) Tj
+T*
+(    Product -.loads config.-> Config) Tj
+T*
+(    Order -.loads config.-> Config) Tj
+T*
+(    Inventory -.loads config.-> Config) Tj
+T*
+(    Payment -.loads config.-> Config) Tj
+T*
+(    Notification -.loads config.-> Config) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Current Saga Flow) Tj
+T*
+() Tj
+T*
+([diagram source: Mermaid]) Tj
+T*
+(sequenceDiagram) Tj
+T*
+(    autonumber) Tj
+T*
+(    participant C as Client) Tj
+T*
+(    participant G as API Gateway) Tj
+T*
+(    participant O as Order Service) Tj
+T*
+(    participant K as Kafka) Tj
+T*
+(    participant I as Inventory Service) Tj
+T*
+(    participant P as Payment Service) Tj
+T*
+() Tj
+T*
+(    C->>G: POST /api/orders with JWT) Tj
+T*
+(    G->>O: Forward request) Tj
+T*
+(    O->>O: Save PENDING order and order_items) Tj
+T*
+(    O->>K: Publish order-created-topic) Tj
+T*
+(    K->>I: Consume OrderCreatedEvent) Tj
+T*
+(    I->>I: Reserve inventory for all items) Tj
+T*
+() Tj
+T*
+(    alt inventory available) Tj
+T*
+(        I->>K: Publish inventory-reserved-topic with orderId, items, amount) Tj
+T*
+(        K->>P: Consume InventoryReservedEvent) Tj
+T*
+(        P->>P: Process payment simulation) Tj
+T*
+(        alt payment success) Tj
+T*
+(            P->>K: Publish payment-success-topic) Tj
+T*
+(            K->>O: Consume PaymentSuccessEvent) Tj
+T*
+(            O->>O: Mark order CONFIRMED) Tj
+T*
+(        else payment failed) Tj
+T*
+(            P->>K: Publish payment-failed-topic with orderId, items) Tj
+T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3838 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+(            K->>O: Consume PaymentFailedEvent) Tj
+T*
+(            O->>O: Mark order CANCELLED) Tj
+T*
+(            K->>I: Consume PaymentFailedEvent) Tj
+T*
+(            I->>I: Release reserved inventory) Tj
+T*
+(        end) Tj
+T*
+(    else inventory unavailable) Tj
+T*
+(        I->>I: Roll back any partial reservation) Tj
+T*
+(        I->>K: Publish inventory-failed-topic) Tj
+T*
+(        K->>O: Consume InventoryFailedEvent) Tj
+T*
+(        O->>O: Mark order CANCELLED) Tj
+T*
+(    end) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Current Module Status) Tj
+T*
+() Tj
+T*
+(| Module | Current status | Evidence | Main gaps |) Tj
+T*
+(|---|---|---|---|) Tj
+T*
+(| discovery-server | Implemented basic Eureka server | `@EnableEurekaServer` | No security, HA) Tj
+T*
+(clustering, or container health setup |) Tj
+T*
+(| config-server | Implemented native config server |) Tj
+T*
+(`spring.cloud.config.server.native.search-locations=classpath:/config` | No Git-backed config) Tj
+T*
+(profile, encryption, refresh bus, or secrets strategy |) Tj
+T*
+(| api-gateway | Implemented basic routing and JWT route filter | Gateway routes and) Tj
+T*
+(`JwtAuthenticationFilterGatewayFilterFactory` | No rate limiter, circuit breaker, retries,) Tj
+T*
+(fallback routes, request correlation, or CORS policy |) Tj
+T*
+(| auth-service | Implemented basic register/login/JWT | Auth controller, JWT service, user) Tj
+T*
+(repository | No refresh tokens, token revocation, role claims in JWT, endpoint validation,) Tj
+T*
+(duplicate user handling, or OAuth2/Keycloak |) Tj
+T*
+(| product-service | Implemented basic CRUD | Product entity, controller, service, repository |) Tj
+T*
+(No update endpoint, search/filtering, cache, validation, or inventory synchronization |) Tj
+T*
+(| order-service | Implemented order creation and saga event consumers | Creates order,) Tj
+T*
+(publishes order-created, handles payment/inventory failures | No idempotency, outbox, order) Tj
+T*
+(query endpoints, validation, DLQ handling, or optimistic locking |) Tj
+T*
+(| inventory-service | Implemented reserve/release and saga event handling | Consumes) Tj
+T*
+(order-created/payment-failed, publishes inventory-reserved/failed | No idempotency, concurrency) Tj
+T*
+(protection, outbox, validation, or inventory confirmation step |) Tj
+T*
+(| payment-service | Implemented payment entity and simulated payment | Consumes) Tj
+T*
+(inventory-reserved, publishes success/failure | Random success/failure only, no external) Tj
+T*
+(provider, no idempotency, no retries, no provider timeout handling |) Tj
+T*
+(| notification-service | Module exists but not implemented | Only application class exists |) Tj
+T*
+(Needs Kafka consumers, mail sender/service, templates, retry/DLQ, notification audit |) Tj
+T*
+() Tj
+T*
+(Concept Coverage Matrix) Tj
+T*
+() Tj
+T*
+(| Concept | Current state | Where it belongs | Recommended implementation |) Tj
+T*
+(|---|---|---|---|) Tj
+T*
+(| API Gateway | Present | api-gateway | Keep all external routing here; add gateway-level) Tj
+T*
+(resilience, throttling, CORS, and request correlation |) Tj
+T*
+(| JWT authentication | Partially present | auth-service and api-gateway | Auth issues tokens;) Tj
+T*
+(gateway validates tokens; downstream services can trust gateway or validate method-level roles) Tj
+T*
+(|) Tj
+T*
+(| Eureka discovery | Present | discovery-server plus all services | Already included; add) Tj
+T*
+(health checks and consider multiple Eureka nodes for production |) Tj
+T*
+(| Config server | Present | config-server plus all services | Already wired; add config) Tj
+T*
+(encryption and secret externalization |) Tj
+T*
+(| Database per service | Mostly present | auth/product/order/inventory/payment | Keep separate) Tj
+T*
+(DBs; add Flyway/Liquibase migrations |) Tj
+T*
+(| Kafka event-driven flow | Present for saga | order/inventory/payment | Add JSON) Tj
+T*
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 3946 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+(serializer/deserializer config, consumer groups, retries, DLQs, and schema/version strategy |) Tj
+T*
+(| Saga choreography | Present | order/inventory/payment | Add idempotency, outbox pattern,) Tj
+T*
+(retry/DLQ, and event status tracking |) Tj
+T*
+(| Compensation transaction | Present for payment/inventory failure | order-service and) Tj
+T*
+(inventory-service | Payment failure cancels order and releases inventory; inventory failure) Tj
+T*
+(cancels order |) Tj
+T*
+(| Circuit breaker | Missing | api-gateway, REST clients, external payment provider | Add) Tj
+T*
+(Resilience4j circuit breakers for gateway routes and any synchronous service calls |) Tj
+T*
+(| Retry pattern | Missing | Kafka consumers, external calls, gateway routes | Use Kafka) Tj
+T*
+(retry/DLQ for async; Resilience4j retry for transient synchronous calls |) Tj
+T*
+(| Rate limiting | Missing | api-gateway | Use Spring Cloud Gateway RedisRateLimiter or Bucket4j) Tj
+T*
+(|) Tj
+T*
+(| Bulkhead | Missing | payment-service, notification-service, gateway | Use Resilience4j) Tj
+T*
+(bulkhead/thread-pool bulkhead around payment provider and mail sender |) Tj
+T*
+(| Timeout | Missing | gateway, external provider calls, REST clients | Configure gateway HTTP) Tj
+T*
+(client timeouts and WebClient/RestClient timeouts |) Tj
+T*
+(| Fallback | Missing | api-gateway and external calls | Add route fallback endpoints for) Tj
+T*
+(unavailable services where useful |) Tj
+T*
+(| Idempotency | Missing | order/inventory/payment Kafka consumers and order creation | Store) Tj
+T*
+(processed event IDs or idempotency keys; prevent duplicate reservation/payment |) Tj
+T*
+(| Outbox pattern | Missing | order/inventory/payment | Persist events in same DB transaction) Tj
+T*
+(and publish asynchronously |) Tj
+T*
+(| Dead letter queue | Missing | Kafka consumers | Add retry topics and `.DLT` handlers for) Tj
+T*
+(failed events |) Tj
+T*
+(| Distributed tracing | Missing | all modules | Add Micrometer Tracing and Zipkin/OTel exporter) Tj
+T*
+(|) Tj
+T*
+(| Centralized logging | Missing | all modules | Add trace IDs to logs and ship logs to) Tj
+T*
+(ELK/OpenSearch/Loki |) Tj
+T*
+(| Metrics and monitoring | Partial | all modules | Actuator exists; add Prometheus registry and) Tj
+T*
+(dashboards |) Tj
+T*
+(| OpenAPI documentation | Missing | all API services | Add springdoc-openapi to gateway or each) Tj
+T*
+(service |) Tj
+T*
+(| Validation | Partial/missing | controllers and DTOs | Add `@Valid`, bean constraints, and) Tj
+T*
+(global exception handlers |) Tj
+T*
+(| Security authorization | Partial/missing | gateway and services | Add roles/claims, method) Tj
+T*
+(security, admin-only product/inventory writes |) Tj
+T*
+(| Secrets management | Missing | config-server, deployment | Move DB passwords/JWT secret out) Tj
+T*
+(of source into environment variables or Vault |) Tj
+T*
+(| Containerization | Missing | repo root and modules | Add Dockerfiles and docker-compose for) Tj
+T*
+(Postgres, Kafka, Eureka, Config, services |) Tj
+T*
+(| CI/CD | Missing | repo root | Add build/test workflow and container publishing |) Tj
+T*
+(| Kubernetes readiness | Missing | deployment manifests | Add probes, ConfigMaps, Secrets, HPA,) Tj
+T*
+(and Ingress/Gateway |) Tj
+T*
+() Tj
+T*
+(Where Missing Concepts Should Go) Tj
+T*
+() Tj
+T*
+(API Gateway) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- JWT validation for protected routes: already present.) Tj
+T*
+(- Auth route bypass: already present for `/auth/`.) Tj
+T*
+(- Rate limiting: protect public APIs from burst traffic.) Tj
+T*
+(- Route circuit breakers: prevent slow/down services from consuming gateway resources.) Tj
+T*
+(- Gateway retries: only for idempotent reads, not order creation/payment mutation.) Tj
+T*
+(- Request timeout: stop waiting forever on downstream services.) Tj
+T*
+(- CORS policy: if a browser frontend will call the gateway.) Tj
+T*
+(- Request correlation ID: generate or propagate `X-Correlation-Id`.) Tj
+T*
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1929 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+() Tj
+T*
+(Recommended dependencies:) Tj
+T*
+() Tj
+T*
+(xml) Tj
+T*
+(<dependency>) Tj
+T*
+(    <groupId>org.springframework.cloud</groupId>) Tj
+T*
+(    <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>) Tj
+T*
+(</dependency>) Tj
+T*
+(<dependency>) Tj
+T*
+(    <groupId>org.springframework.boot</groupId>) Tj
+T*
+(    <artifactId>spring-boot-starter-data-redis-reactive</artifactId>) Tj
+T*
+(</dependency>) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Recommended route placement:) Tj
+T*
+() Tj
+T*
+(yaml) Tj
+T*
+(spring:) Tj
+T*
+(  cloud:) Tj
+T*
+(    gateway:) Tj
+T*
+(      routes:) Tj
+T*
+(        - id: order-service) Tj
+T*
+(          uri: lb://ORDER-SERVICE) Tj
+T*
+(          predicates:) Tj
+T*
+(            - Path=/api/orders/) Tj
+T*
+(          filters:) Tj
+T*
+(            - JwtAuthenticationFilter) Tj
+T*
+(            - name: CircuitBreaker) Tj
+T*
+(              args:) Tj
+T*
+(                name: orderServiceCircuitBreaker) Tj
+T*
+(                fallbackUri: forward:/fallback/orders) Tj
+T*
+(            - name: RequestRateLimiter) Tj
+T*
+(              args:) Tj
+T*
+(                redis-rate-limiter.replenishRate: 20) Tj
+T*
+(                redis-rate-limiter.burstCapacity: 40) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Auth Service) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- Duplicate username/email validation.) Tj
+T*
+(- Password policy validation.) Tj
+T*
+(- Role claims inside JWT.) Tj
+T*
+(- Refresh token support.) Tj
+T*
+(- Token expiration configuration from config-server.) Tj
+T*
+(- Global exception handler.) Tj
+T*
+(- Optional Keycloak/OAuth2 migration later.) Tj
+T*
+() Tj
+T*
+(Product Service) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- Bean validation for product create/update.) Tj
+T*
+(- Product update endpoint.) Tj
+T*
+(- Search/filter endpoint.) Tj
+T*
+(- Cache read-heavy product catalog with Redis.) Tj
+T*
+(- Admin authorization for write operations.) Tj
+T*
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 2417 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+(- OpenAPI docs.) Tj
+T*
+() Tj
+T*
+(Order Service) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- Idempotency key for `POST /api/orders`.) Tj
+T*
+(- Outbox table for reliable `order-created-topic` publishing.) Tj
+T*
+(- Query endpoints for order status/history.) Tj
+T*
+(- Kafka consumer idempotency for `payment-success`, `payment-failed`, `inventory-failed`.) Tj
+T*
+(- DLQ handler for failed saga events.) Tj
+T*
+(- Validation for request items.) Tj
+T*
+(- Optional state transition guard: do not confirm a cancelled order or cancel a confirmed) Tj
+T*
+(order.) Tj
+T*
+() Tj
+T*
+(Important placement:) Tj
+T*
+() Tj
+T*
+(- Circuit breaker is not needed for the current Kafka-based saga path because no synchronous) Tj
+T*
+(downstream service call is made.) Tj
+T*
+(- If order-service later calls product-service or user-service synchronously, put circuit) Tj
+T*
+(breaker/retry/timeouts on those clients.) Tj
+T*
+() Tj
+T*
+(Inventory Service) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- Idempotent reservation and release by `orderId`.) Tj
+T*
+(- Optimistic locking on inventory rows to avoid overselling.) Tj
+T*
+(- Outbox table for `inventory-reserved-topic` and `inventory-failed-topic`.) Tj
+T*
+(- DLQ handler for failed `order-created-topic` and `payment-failed-topic` messages.) Tj
+T*
+(- Validation for negative stock and negative release.) Tj
+T*
+(- Optional inventory confirmation after payment success if reserved stock should become sold) Tj
+T*
+(stock.) Tj
+T*
+() Tj
+T*
+(Payment Service) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- Real provider integration behind an adapter: Stripe/Razorpay/etc.) Tj
+T*
+(- Circuit breaker, retry, timeout, and bulkhead around the external provider call.) Tj
+T*
+(- Idempotency by `orderId` or payment request ID.) Tj
+T*
+(- Outbox table for `payment-success-topic` and `payment-failed-topic`.) Tj
+T*
+(- DLQ handler for failed `inventory-reserved-topic` messages.) Tj
+T*
+(- Do not use random success/failure outside demos.) Tj
+T*
+() Tj
+T*
+(Recommended placement:) Tj
+T*
+() Tj
+T*
+(java) Tj
+T*
+(@CircuitBreaker\(name = "paymentProvider", fallbackMethod = "paymentFallback"\)) Tj
+T*
+(@Retry\(name = "paymentProvider"\)) Tj
+T*
+(@TimeLimiter\(name = "paymentProvider"\)) Tj
+T*
+(public PaymentResult charge\(...\) {) Tj
+T*
+(    // external provider call) Tj
+T*
+(}) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Notification Service) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 2399 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+(This is currently the largest missing module.) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- Kafka consumers for `payment-success-topic`, `payment-failed-topic`, and optionally) Tj
+T*
+(`inventory-failed-topic`.) Tj
+T*
+(- Email sending service using `JavaMailSender`.) Tj
+T*
+(- Notification templates.) Tj
+T*
+(- Retry and DLQ for failed email sends.) Tj
+T*
+(- Notification audit table if delivery state must be tracked.) Tj
+T*
+(- Bulkhead around mail sending so it cannot exhaust service threads.) Tj
+T*
+() Tj
+T*
+(Recommended consumers:) Tj
+T*
+() Tj
+T*
+(text) Tj
+T*
+(payment-success-topic -> send order confirmation email) Tj
+T*
+(payment-failed-topic  -> send payment failure / order cancelled email) Tj
+T*
+(inventory-failed-topic -> send out-of-stock / order cancelled email) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Config Server) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- Keep native config for local development.) Tj
+T*
+(- Add Git-backed profile for shared environments.) Tj
+T*
+(- Encrypt secrets or move them to Vault/environment variables.) Tj
+T*
+(- Add Spring Cloud Bus if runtime config refresh is required.) Tj
+T*
+() Tj
+T*
+(Discovery Server) Tj
+T*
+() Tj
+T*
+(Add these concepts here:) Tj
+T*
+() Tj
+T*
+(- For local development, one Eureka server is enough.) Tj
+T*
+(- For production, run more than one Eureka node.) Tj
+T*
+(- Add health checks and deployment probes.) Tj
+T*
+() Tj
+T*
+(Current Event Topics) Tj
+T*
+() Tj
+T*
+(| Topic | Producer | Consumer | Implemented |) Tj
+T*
+(|---|---|---|---|) Tj
+T*
+(| order-created-topic | order-service | inventory-service | Yes |) Tj
+T*
+(| inventory-reserved-topic | inventory-service | payment-service | Yes |) Tj
+T*
+(| inventory-failed-topic | inventory-service | order-service | Yes |) Tj
+T*
+(| payment-success-topic | payment-service | order-service | Yes |) Tj
+T*
+(| payment-failed-topic | payment-service | order-service, inventory-service | Yes |) Tj
+T*
+(| order-confirmed-topic | none | notification-service | No |) Tj
+T*
+(| order-cancelled-topic | none | notification-service | No |) Tj
+T*
+() Tj
+T*
+(Suggested Target Flow With Notification) Tj
+T*
+() Tj
+T*
+([diagram source: Mermaid]) Tj
+T*
+(flowchart TD) Tj
+T*
+(    OrderConfirmed[Order confirmed]) Tj
+T*
+(    OrderCancelled[Order cancelled]) Tj
+T*
+(    Kafka[\(Kafka\)]) Tj
+T*
+(    Notify[Notification Service]) Tj
+T*
+(    Mail[Email Provider]) Tj
+T*
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 18 0 R >>
+endobj
+18 0 obj
+<< /Length 2771 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+() Tj
+T*
+(    OrderConfirmed -->|order-confirmed-topic| Kafka) Tj
+T*
+(    OrderCancelled -->|order-cancelled-topic| Kafka) Tj
+T*
+(    Kafka --> Notify) Tj
+T*
+(    Notify --> Mail) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(The current code does not publish `order-confirmed-topic` or `order-cancelled-topic`.) Tj
+T*
+(Notification could consume existing `payment-success-topic`, `payment-failed-topic`, and) Tj
+T*
+(`inventory-failed-topic`, but explicit order lifecycle topics are cleaner.) Tj
+T*
+() Tj
+T*
+(Recommended Implementation Priority) Tj
+T*
+() Tj
+T*
+(| Priority | Work item | Reason |) Tj
+T*
+(|---|---|---|) Tj
+T*
+(| P0 | Add Maven wrapper or install Maven | Needed to compile and verify the workspace) Tj
+T*
+(consistently |) Tj
+T*
+(| P0 | Add Kafka JSON serializer/deserializer config | Current object events may fail at) Tj
+T*
+(runtime without this |) Tj
+T*
+(| P0 | Implement notification-service | Required module is currently empty |) Tj
+T*
+(| P1 | Add validation and exception handling | Prevent bad requests and improve API behavior |) Tj
+T*
+(| P1 | Add idempotency to saga consumers | Kafka can deliver duplicate messages |) Tj
+T*
+(| P1 | Add outbox pattern | Prevent DB commit/event publish inconsistency |) Tj
+T*
+(| P1 | Add DLQ/retry topics | Prevent poison messages from blocking consumers |) Tj
+T*
+(| P2 | Add gateway rate limiting | Protect public APIs |) Tj
+T*
+(| P2 | Add circuit breakers/timeouts | Needed for gateway routes and external provider calls |) Tj
+T*
+(| P2 | Add tracing and metrics | Needed for debugging distributed flows |) Tj
+T*
+(| P3 | Add Docker Compose | Needed for repeatable local environment |) Tj
+T*
+(| P3 | Add CI/CD and Kubernetes manifests | Needed for deployment maturity |) Tj
+T*
+() Tj
+T*
+(Most Important Missing Concepts) Tj
+T*
+() Tj
+T*
+(1. Kafka Reliability) Tj
+T*
+() Tj
+T*
+(The code uses Kafka, but production reliability is not complete without:) Tj
+T*
+() Tj
+T*
+(- JSON serializer/deserializer configuration.) Tj
+T*
+(- Consumer group IDs.) Tj
+T*
+(- Retry topics.) Tj
+T*
+(- Dead letter topics.) Tj
+T*
+(- Idempotent consumers.) Tj
+T*
+(- Event schema/versioning.) Tj
+T*
+() Tj
+T*
+(This belongs in `order-service`, `inventory-service`, `payment-service`, and) Tj
+T*
+(`notification-service`.) Tj
+T*
+() Tj
+T*
+(2. Outbox Pattern) Tj
+T*
+() Tj
+T*
+(The current services save DB state and publish Kafka messages directly from service logic. This) Tj
+T*
+(can fail between database commit and event publish.) Tj
+T*
+() Tj
+T*
+(Use outbox tables in:) Tj
+T*
+() Tj
+T*
+(- order-service for `order-created-topic`) Tj
+T*
+(- inventory-service for `inventory-reserved-topic` and `inventory-failed-topic`) Tj
+T*
+(- payment-service for `payment-success-topic` and `payment-failed-topic`) Tj
+T*
+() Tj
+T*
+(3. Circuit Breaker) Tj
+T*
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 20 0 R >>
+endobj
+20 0 obj
+<< /Length 2200 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+() Tj
+T*
+(Circuit breaker is currently missing.) Tj
+T*
+() Tj
+T*
+(Best placement:) Tj
+T*
+() Tj
+T*
+(- API Gateway route circuit breakers for downstream service availability.) Tj
+T*
+(- Payment Service around external payment provider calls.) Tj
+T*
+(- Notification Service around mail provider calls.) Tj
+T*
+(- Any future synchronous service-to-service client.) Tj
+T*
+() Tj
+T*
+(Circuit breaker is less relevant inside the existing Kafka choreography itself because Kafka) Tj
+T*
+(decouples producer and consumer availability.) Tj
+T*
+() Tj
+T*
+(4. Rate Limiting) Tj
+T*
+() Tj
+T*
+(Rate limiting is currently missing.) Tj
+T*
+() Tj
+T*
+(Best placement:) Tj
+T*
+() Tj
+T*
+(- API Gateway, per route and/or per user/IP.) Tj
+T*
+(- Optionally stricter limits on auth login/register to reduce brute-force risk.) Tj
+T*
+() Tj
+T*
+(5. Observability) Tj
+T*
+() Tj
+T*
+(Actuator dependencies exist in most modules, but observability is incomplete.) Tj
+T*
+() Tj
+T*
+(Add:) Tj
+T*
+() Tj
+T*
+(- Micrometer Prometheus registry.) Tj
+T*
+(- Micrometer Tracing with OpenTelemetry/Zipkin.) Tj
+T*
+(- Correlation ID propagation through gateway and Kafka headers.) Tj
+T*
+(- Centralized logs with trace IDs.) Tj
+T*
+() Tj
+T*
+(Current Completion Summary) Tj
+T*
+() Tj
+T*
+(| Area | Completion |) Tj
+T*
+(|---|---|) Tj
+T*
+(| Module skeletons | Complete |) Tj
+T*
+(| Basic service discovery | Complete |) Tj
+T*
+(| Basic config server | Complete |) Tj
+T*
+(| Gateway routing | Mostly complete |) Tj
+T*
+(| JWT auth | Basic implementation complete |) Tj
+T*
+(| Product CRUD | Basic implementation complete |) Tj
+T*
+(| Order saga | Basic implementation complete |) Tj
+T*
+(| Inventory compensation | Basic implementation complete |) Tj
+T*
+(| Payment flow | Demo implementation complete |) Tj
+T*
+(| Notification service | Missing |) Tj
+T*
+(| Kafka production hardening | Missing |) Tj
+T*
+(| Circuit breaker/retry/rate limit | Missing |) Tj
+T*
+(| Observability | Missing |) Tj
+T*
+(| Tests | Missing |) Tj
+T*
+(| Docker/Kubernetes/CI | Missing |) Tj
+T*
+() Tj
+T*
+(Final Assessment) Tj
+T*
+() Tj
+T*
+(The project currently demonstrates the core learning concepts of a Spring Boot microservices) Tj
+T*
+(e-commerce system:) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 22 0 R >>
+endobj
+22 0 obj
+<< /Length 535 >>
+stream
+BT
+/F1 9 Tf
+11 TL
+50 760 Td
+(- API Gateway) Tj
+T*
+(- JWT authentication) Tj
+T*
+(- Eureka service discovery) Tj
+T*
+(- Config server) Tj
+T*
+(- Database per service) Tj
+T*
+(- Kafka-based saga choreography) Tj
+T*
+(- Compensation for payment and inventory failure) Tj
+T*
+() Tj
+T*
+(It is not yet production-grade. The largest remaining gaps are notification-service) Tj
+T*
+(implementation, Kafka reliability, idempotency, outbox pattern, circuit breakers, rate) Tj
+T*
+(limiting, observability, tests, and repeatable infrastructure.) Tj
+T*
+ET
+endstream
+endobj
+xref
+0 23
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000178 00000 n 
+0000000353 00000 n 
+0000002459 00000 n 
+0000002634 00000 n 
+0000005195 00000 n 
+0000005370 00000 n 
+0000009260 00000 n 
+0000009436 00000 n 
+0000013435 00000 n 
+0000013612 00000 n 
+0000015594 00000 n 
+0000015771 00000 n 
+0000018241 00000 n 
+0000018418 00000 n 
+0000020870 00000 n 
+0000021047 00000 n 
+0000023871 00000 n 
+0000024048 00000 n 
+0000026301 00000 n 
+0000026478 00000 n 
+trailer
+<< /Size 23 /Root 1 0 R >>
+startxref
+27065
+%%EOF
